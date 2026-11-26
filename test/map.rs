@@ -1154,3 +1154,43 @@ fn raw_read_into_every_offset_and_length() {
         }
     }
 }
+
+#[test]
+#[cfg(target_os = "linux")]
+fn split_discard_discards_lent_pages() {
+    let page = page_size();
+    let mut mmap = MmapMut::map_anon(8 * page).unwrap();
+    {
+        let (bytes, discarder) = mmap.split_discard();
+        bytes.fill(0xaa);
+        discarder.discard(&mut bytes[2 * page..5 * page]).unwrap();
+        assert!(bytes[2 * page..5 * page].iter().all(|&b| b == 0));
+        assert!(bytes[..2 * page].iter().all(|&b| b == 0xaa));
+        assert!(bytes[5 * page..].iter().all(|&b| b == 0xaa));
+    }
+}
+
+#[test]
+#[cfg(unix)]
+fn split_discard_refuses_pages_outside_or_unaligned() {
+    let page = page_size();
+    let mut mmap = MmapMut::map_anon(4 * page).unwrap();
+    let mut elsewhere = MmapMut::map_anon(page).unwrap();
+    let (bytes, discarder) = mmap.split_discard();
+    bytes.fill(0xaa);
+
+    let kind = |r: std::io::Result<()>| r.unwrap_err().kind();
+    assert_eq!(
+        kind(discarder.discard(&mut elsewhere[..])),
+        std::io::ErrorKind::InvalidInput
+    );
+    assert_eq!(
+        kind(discarder.discard(&mut bytes[1..=page])),
+        std::io::ErrorKind::InvalidInput
+    );
+    assert_eq!(
+        kind(discarder.discard(&mut bytes[..page - 1])),
+        std::io::ErrorKind::InvalidInput
+    );
+    assert!(bytes.iter().all(|&b| b == 0xaa));
+}

@@ -998,3 +998,35 @@ fn raw_read_into_sees_writes_to_the_file() {
     assert_eq!(mmap.read_into(0, &mut buf), 6);
     assert_eq!(&buf, b"xyz123");
 }
+
+#[test]
+#[cfg(unix)]
+fn resident_pages_counts_touched_pages() {
+    let page = page_size();
+    let mut mmap = MmapMut::map_anon(16 * page).unwrap();
+    assert_eq!(mmap.resident_pages().unwrap(), 0);
+
+    for i in 0..3 {
+        mmap[i * page] = 1;
+    }
+    assert_eq!(mmap.resident_pages().unwrap(), 3);
+}
+
+#[test]
+#[cfg(unix)]
+fn resident_pages_of_a_file_map() {
+    let page = page_size();
+    let mut file = tempfile::tempfile().unwrap();
+    file.write_all(&vec![7; 4 * page]).unwrap();
+    let mmap = unsafe { Mmap::map(&file).unwrap() };
+
+    let resident = mmap.resident_pages().unwrap();
+    assert!(resident <= 4, "{resident} of 4 pages");
+    assert_eq!(mmap[0], 7);
+    assert!(mmap.resident_pages().unwrap() >= 1);
+}
+
+#[cfg(unix)]
+fn page_size() -> usize {
+    unsafe { libc::sysconf(libc::_SC_PAGESIZE) as usize }
+}

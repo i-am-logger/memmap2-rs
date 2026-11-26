@@ -1057,6 +1057,16 @@ impl Mmap {
     /// Lock the whole memory map into RAM. Only supported on Unix.
     ///
     /// See [mlock()](https://man7.org/linux/man-pages/man2/mlock.2.html) map page.
+    /// Returns how many pages of the memory map are resident in RAM. Only supported on Unix.
+    ///
+    /// A page is the system's page size. A page the map covers in part counts as a whole one.
+    ///
+    /// See [mincore()](https://man7.org/linux/man-pages/man2/mincore.2.html) map page.
+    #[cfg(unix)]
+    pub fn resident_pages(&self) -> std::io::Result<usize> {
+        self.inner.resident_pages()
+    }
+
     #[cfg(unix)]
     pub fn lock(&self) -> std::io::Result<()> {
         self.inner.lock()
@@ -1370,6 +1380,16 @@ impl MmapRaw {
     /// Lock the whole memory map into RAM. Only supported on Unix.
     ///
     /// See [mlock()](https://man7.org/linux/man-pages/man2/mlock.2.html) map page.
+    /// Returns how many pages of the memory map are resident in RAM. Only supported on Unix.
+    ///
+    /// A page is the system's page size. A page the map covers in part counts as a whole one.
+    ///
+    /// See [mincore()](https://man7.org/linux/man-pages/man2/mincore.2.html) map page.
+    #[cfg(unix)]
+    pub fn resident_pages(&self) -> std::io::Result<usize> {
+        self.inner.resident_pages()
+    }
+
     #[cfg(unix)]
     pub fn lock(&self) -> std::io::Result<()> {
         self.inner.lock()
@@ -1701,6 +1721,16 @@ impl MmapMut {
     /// Lock the whole memory map into RAM. Only supported on Unix.
     ///
     /// See [mlock()](https://man7.org/linux/man-pages/man2/mlock.2.html) map page.
+    /// Returns how many pages of the memory map are resident in RAM. Only supported on Unix.
+    ///
+    /// A page is the system's page size. A page the map covers in part counts as a whole one.
+    ///
+    /// See [mincore()](https://man7.org/linux/man-pages/man2/mincore.2.html) map page.
+    #[cfg(unix)]
+    pub fn resident_pages(&self) -> std::io::Result<usize> {
+        self.inner.resident_pages()
+    }
+
     #[cfg(unix)]
     pub fn lock(&self) -> std::io::Result<()> {
         self.inner.lock()

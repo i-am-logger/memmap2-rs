@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Add `MmapRaw::read_into()` to copy bytes out of a raw map with relaxed atomic loads, from safe code, while another process may write the mapped file. It also works on read-only raw maps.
 - Add `resident_pages()` to `Mmap`, `MmapMut` and `MmapRaw` on Unix: how many pages of the map are resident in RAM (`mincore`).
+- Add `MmapMut::discard_range()` on Unix: discard a page-aligned range so the system can reclaim it, safe because it takes `&mut self` and frees the pages at once (`MADV_DONTNEED` on Linux and Android, a fresh anonymous mapping over the range for anonymous maps on Apple targets).
 
 ## [0.9.12] - 2026-10-21
 ### Added
